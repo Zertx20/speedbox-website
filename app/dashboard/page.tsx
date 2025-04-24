@@ -12,8 +12,79 @@ import { Input } from "@/components/ui/input"
 import { AnimatedCard } from "@/components/animated-card"
 import { FadeInSection } from "@/components/fade-in-section"
 import { ScrollProgress } from "@/components/scroll-progress"
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [isConfirmed, setIsConfirmed] = useState<null | boolean>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchConfirmationStatus = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const supabase = createClient();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          setError("Unable to get user info");
+          setLoading(false);
+          return;
+        }
+        // Fetch the profile directly from Supabase (client-side)
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("is_confirmed")
+          .eq("id", user.id)
+          .single();
+        if (profileError) {
+          setError(profileError.message);
+        } else if (typeof profile?.is_confirmed === "boolean") {
+          setIsConfirmed(profile.is_confirmed);
+        } else {
+          setError("Profile not found");
+        }
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConfirmationStatus();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-900 text-red-500">
+        <span>{error}</span>
+      </div>
+    );
+  }
+
+  if (isConfirmed === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-900 text-yellow-400">
+        <div className="p-8 bg-gray-800 rounded shadow text-center">
+          <h2 className="text-2xl font-bold mb-4">Account Not Confirmed</h2>
+          <p className="mb-2">You need to visit an agency with your ID to confirm your account.</p>
+          <p>Once confirmed, you'll be able to access your dashboard.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only show dashboard if isConfirmed === true
   return (
     <div className="flex min-h-screen flex-col bg-gray-900 text-white">
       <ScrollProgress />
@@ -44,16 +115,15 @@ export default function DashboardPage() {
             </motion.div>
 
             <span className="text-sm font-medium text-gray-300">Welcome, Ahmed</span>
-            <Link href="/logout">
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-gray-700 text-gray-300 hover:text-primary hover:border-primary"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="sr-only">Logout</span>
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              size="icon"
+              className="border-gray-700 text-gray-300 hover:text-primary hover:border-primary"
+              onClick={() => router.push("/")}
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Logout</span>
+            </Button>
           </div>
         </div>
       </header>
