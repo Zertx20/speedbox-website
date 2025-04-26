@@ -54,7 +54,7 @@ export function Package3D() {
         {/* Front face - Package image */}
         <div className="absolute inset-0 rounded-lg shadow-lg overflow-hidden">
           <img
-            src="/placeholder.svg?height=200&width=200&text=Package"
+            src="/logo3.png"
             alt="SpeedBox Package"
             className="w-full h-full object-cover"
           />
@@ -64,7 +64,7 @@ export function Package3D() {
         <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-lg flex items-center justify-center backface-hidden rotate-y-180">
           <div className="w-full h-full flex flex-col items-center justify-center">
             <img
-              src="/placeholder.svg?height=120&width=120&text=Logo"
+              src="/logo3.png"
               alt="SpeedBox Logo"
               className="w-3/4 h-3/4 object-contain mb-2"
             />
@@ -73,16 +73,16 @@ export function Package3D() {
         </div>
 
         {/* Top face */}
-        <div className="absolute w-full h-[10px] bg-gradient-to-r from-blue-600 to-blue-800 origin-top transform -translate-z-[5px] rotate-x-90 top-0 rounded-t-lg"></div>
+        <div className="absolute w-full h-[10px] bg-gradient-to-r from-gray-600/40 to-gray-800/40 origin-top transform -translate-z-[5px] rotate-x-90 top-0 rounded-t-lg"></div>
 
         {/* Bottom face */}
-        <div className="absolute w-full h-[10px] bg-gradient-to-r from-blue-900 to-blue-950 origin-bottom transform -translate-z-[5px] -rotate-x-90 bottom-0 rounded-b-lg"></div>
+        <div className="absolute w-full h-[10px] bg-gradient-to-r from-gray-800/40 to-gray-900/40 origin-bottom transform -translate-z-[5px] -rotate-x-90 bottom-0 rounded-b-lg"></div>
 
         {/* Left face */}
-        <div className="absolute h-full w-[10px] bg-gradient-to-b from-blue-700 to-blue-900 origin-left transform -translate-x-[5px] rotate-y-90 left-0 rounded-l-lg"></div>
+        <div className="absolute h-full w-[10px] bg-gradient-to-b from-gray-700/40 to-gray-800/40 origin-left transform -translate-x-[5px] rotate-y-90 left-0 rounded-l-lg"></div>
 
         {/* Right face */}
-        <div className="absolute h-full w-[10px] bg-gradient-to-b from-blue-700 to-blue-900 origin-right transform translate-x-[5px] -rotate-y-90 right-0 rounded-r-lg"></div>
+        <div className="absolute h-full w-[10px] bg-gradient-to-b from-gray-700/40 to-gray-800/40 origin-right transform translate-x-[5px] -rotate-y-90 right-0 rounded-r-lg"></div>
       </motion.div>
 
       {/* Enhanced shadow with animation */}

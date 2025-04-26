@@ -19,7 +19,7 @@ export default function FAQPage() {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
-              <Package className="h-6 w-6 text-primary" />
+            <img src="/logo4.png" alt="SpeedBox Logo" className="h-12 w-12 object-contain" />
             </motion.div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
               SpeedBox

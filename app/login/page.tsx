@@ -53,7 +53,7 @@ export default function LoginPage() {
       <ParticlesBackground />
       <Link href="/" className="absolute left-8 top-8 flex items-center gap-2">
         <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
-          <Package className="h-6 w-6 text-primary" />
+        <img src="/logo4.png" alt="SpeedBox Logo" className="h-12 w-12 object-contain" />
         </motion.div>
         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
           SpeedBox

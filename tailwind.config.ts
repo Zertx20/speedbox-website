@@ -26,8 +26,8 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#66C2FF", // Soft Aqua Blue-Green
-          hover: "#4DB8FF", // Slightly darker for hover states
+          DEFAULT: "#89c9db", // Soft Aqua Blue-Green
+          hover: "#70b0c2", // Slightly darker for hover states
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -45,10 +45,6 @@ const config = {
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "#FF7A5A", // Coral
-          foreground: "hsl(var(--accent-foreground))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -126,9 +122,9 @@ const config = {
         float: "float 3s ease-in-out infinite",
       },
       backgroundImage: {
-        "gradient-wave": "linear-gradient(45deg, #66C2FF, #80CCFF, #99D6FF, #B3E0FF, #99D6FF, #80CCFF, #66C2FF)",
+        "gradient-wave": "linear-gradient(45deg, #89c9db, #9ad4e5, #abd9e8, #bce3f0, #abd9e8, #9ad4e5, #89c9db)",
         "gradient-dark": "linear-gradient(to right, #1a1a1a, #2d2d2d, #1a1a1a)",
-        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, #66C2FF, #FF7A5A, #9C27B0, #4CAF50, #66C2FF)",
+        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, #89c9db, #FF7A5A, #9C27B0, #4CAF50, #89c9db)",
       },
       boxShadow: {
         neon: "0 0 5px theme(colors.primary.DEFAULT), 0 0 20px theme(colors.primary.DEFAULT)",

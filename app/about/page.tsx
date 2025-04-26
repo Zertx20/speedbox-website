@@ -19,7 +19,7 @@ export default function AboutPage() {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
-              <Package className="h-6 w-6 text-primary" />
+            <img src="/logo4.png" alt="SpeedBox Logo" className="h-12 w-12 object-contain" />
             </motion.div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
               SpeedBox
@@ -96,7 +96,7 @@ export default function AboutPage() {
               >
                 <div className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 blur-xl animate-pulse-soft"></div>
                 <Image
-                  src="/placeholder.svg?height=400&width=400"
+                  src="/logo3.png"
                   width={400}
                   height={400}
                   alt="About SpeedBox"
@@ -364,15 +364,15 @@ export default function AboutPage() {
 
 const team = [
   {
-    name: "Mohammed Kaddour",
+    name: "Zeriouh Mouad",
     role: "Founder & CEO",
   },
   {
-    name: "Amina Belkacem",
+    name: "Zerrouki Abderrahmene",
     role: "Operations Director",
   },
   {
-    name: "Youcef Hamidi",
+    name: "Settah Omar",
     role: "Technology Lead",
   },
 ]
