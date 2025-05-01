@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 
 export async function signup(formData: FormData) {
@@ -11,7 +10,7 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
   const phone = formData.get('phone') as string
-  // You can also get `confirmPassword` here if you want to validate
+  const role = formData.get('role') as string
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -20,6 +19,8 @@ export async function signup(formData: FormData) {
       data: {
         full_name: fullName,
         phone: phone,
+        role: role,
+        email: email,
       },
     },
   })
@@ -30,6 +31,5 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  // redirect('/dashboard')  <-- REMOVE THIS LINE
 return { success: true }
 }

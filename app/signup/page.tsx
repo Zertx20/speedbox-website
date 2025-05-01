@@ -2,19 +2,20 @@
 
 import { useState } from 'react'
 import Link from "next/link"
-import { Package } from "lucide-react"
+import { User, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import { ParticlesBackground } from "@/components/particles-background"
-import { signup } from "./actions" // Make sure to import the signup action from where it is defined
-import { useRouter } from 'next/navigation';
+import { signup } from "./actions"
+import { useRouter } from 'next/navigation'
 
 
 
 export default function SignupPage() {
+  const [userType, setUserType] = useState<'client' | 'driver'>('client')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -44,6 +45,7 @@ export default function SignupPage() {
       formData.append('password', password)
       formData.append('fullName', fullName)
       formData.append('phone', phone)
+      formData.append('role', userType)
 
       const result = await signup(formData) // Calling your signup function
       if (result?.error) {
@@ -80,6 +82,33 @@ export default function SignupPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setUserType('client')}
+                  className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center gap-2 transition-all ${userType === 'client' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'}`}
+                >
+                  <User className="w-8 h-8" />
+                  <span className="font-medium">Client</span>
+                </motion.button>
+                
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setUserType('driver')}
+                  className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center gap-2 transition-all ${userType === 'driver' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'}`}
+                >
+                  <Truck className="w-8 h-8" />
+                  <span className="font-medium">Driver</span>
+                </motion.button>
+              </div>
               {error && <div className="text-red-500">{error}</div>}
               
               <div className="space-y-2">

@@ -20,9 +20,8 @@ export default function AdminDashboardPage() {
   const { toast } = useToast()
   const router = useRouter()
   
-  // State for stats and admin info
+  // State for stats
   const [loading, setLoading] = useState(true)
-  const [adminName, setAdminName] = useState('Admin')
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeDeliveries: 0,
@@ -31,34 +30,9 @@ export default function AdminDashboardPage() {
     cancelledDeliveries: 0
   })
   
-  // Fetch admin info
-  const fetchAdminInfo = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        // Get admin profile from database
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, email')
-          .eq('id', user.id)
-          .single()
-        
-        if (profile && profile.full_name) {
-          setAdminName(profile.full_name)
-        } else if (user.email) {
-          // Fallback to email if no name is set
-          setAdminName(user.email.split('@')[0])
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching admin info:', error)
-    }
-  }
-  
   // Fetch data on component mount
   useEffect(() => {
     fetchData()
-    fetchAdminInfo()
     
     // Add error handler for ResizeObserver errors
     const errorHandler = (event: ErrorEvent) => {
@@ -139,8 +113,8 @@ export default function AdminDashboardPage() {
             <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0] }} transition={{ duration: 0.5 }}>
               <img src="/logo4.png" alt="SpeedBox Logo" className="h-12 w-12 object-contain" />
             </motion.div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-              SpeedBox
+            <span className="text-xl font-bold text-cyan-400">
+              SpeedBox Admin
             </span>
           </div>
 
@@ -160,7 +134,7 @@ export default function AdminDashboardPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-gray-300">{adminName}</span>
+            <span className="text-sm font-medium text-gray-300">Admin Panel</span>
             <Button
               variant="outline"
               size="icon"
@@ -176,24 +150,14 @@ export default function AdminDashboardPage() {
 
       <main className="flex-1 container py-8">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <motion.h1
-              className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              Admin Dashboard
-            </motion.h1>
-            <motion.p 
-              className="text-gray-400 mt-1"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              Welcome back, {adminName}
-            </motion.p>
-          </div>
+          <motion.h1
+            className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            Admin Dashboard
+          </motion.h1>
         </div>
 
         {loading ? (
@@ -203,7 +167,7 @@ export default function AdminDashboardPage() {
         ) : (
           <>
             <FadeInSection>
-              <div className="grid gap-6 md:grid-cols-2 mb-10">
+              <div className="grid gap-6 md:grid-cols-3 mb-10">
                 <AnimatedCard className="bg-gray-800/50 border-gray-700 shadow-lg">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-gray-200">Total Users</CardTitle>
@@ -214,6 +178,19 @@ export default function AdminDashboardPage() {
                   <CardContent>
                     <div className="text-3xl font-bold text-white">{stats.totalUsers}</div>
                     <p className="text-xs text-gray-400 mt-1">Total registered users</p>
+                  </CardContent>
+                </AnimatedCard>
+
+                <AnimatedCard className="bg-gray-800/50 border-gray-700 shadow-lg">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-200">Active Deliveries</CardTitle>
+                    <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center">
+                      <Truck className="h-4 w-4 text-accent" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-white">{stats.activeDeliveries}</div>
+                    <p className="text-xs text-gray-400 mt-1">Currently in transit</p>
                   </CardContent>
                 </AnimatedCard>
 
@@ -233,20 +210,7 @@ export default function AdminDashboardPage() {
             </FadeInSection>
 
             <FadeInSection>
-              <div className="grid gap-6 md:grid-cols-3 mb-10">
-                <AnimatedCard className="bg-gray-800/50 border-gray-700 shadow-lg">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-200">Active Deliveries</CardTitle>
-                    <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center">
-                      <Truck className="h-4 w-4 text-accent" />
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-white">{stats.activeDeliveries}</div>
-                    <p className="text-xs text-gray-400 mt-1">Currently in transit</p>
-                  </CardContent>
-                </AnimatedCard>
-
+              <div className="grid gap-6 md:grid-cols-2 mb-10">
                 <AnimatedCard className="bg-gray-800/50 border-gray-700 shadow-lg">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-gray-200">Completed Deliveries</CardTitle>
@@ -272,6 +236,47 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-gray-400 mt-1">Cancelled orders</p>
                   </CardContent>
                 </AnimatedCard>
+              </div>
+            </FadeInSection>
+
+            <FadeInSection>
+              <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Button 
+                  onClick={() => router.push('/admin/users')} 
+                  className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 h-auto py-3 px-4 justify-start"
+                  variant="ghost"
+                >
+                  <Users className="h-5 w-5 mr-3 text-primary" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">Manage Users</span>
+                    <span className="text-xs text-gray-400 mt-1">Verify and manage accounts</span>
+                  </div>
+                </Button>
+
+                <Button 
+                  onClick={() => router.push('/admin/deliveries')} 
+                  className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 h-auto py-3 px-4 justify-start"
+                  variant="ghost"
+                >
+                  <Truck className="h-5 w-5 mr-3 text-primary" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">Manage Deliveries</span>
+                    <span className="text-xs text-gray-400 mt-1">Track and update status</span>
+                  </div>
+                </Button>
+
+                <Button 
+                  onClick={() => router.push('/admin/new')} 
+                  className="bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 h-auto py-3 px-4 justify-start"
+                  variant="ghost"
+                >
+                  <Plus className="h-5 w-5 mr-3 text-primary" />
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">Create Delivery</span>
+                    <span className="text-xs text-gray-400 mt-1">Add a new delivery</span>
+                  </div>
+                </Button>
               </div>
             </FadeInSection>
           </>

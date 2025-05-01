@@ -5,9 +5,16 @@ import { createServerClient } from '@supabase/ssr'
 export async function middleware(request: NextRequest) {
   // Get the current path
   const path = request.nextUrl.pathname
+
+  // Define role-specific paths
+  const ROLE_PATHS = {
+    admin: '/admin',
+    driver: '/driver',
+    client: '/dashboard'
+  } as const
   
-  // Check if the path is admin or dashboard
-  if (path.startsWith('/admin') || path.startsWith('/dashboard')) {
+  // Check if the path requires authentication
+  if (path.startsWith('/admin') || path.startsWith('/driver') || path.startsWith('/dashboard')) {
     // Create a response object
     let response = NextResponse.next({
       request: {
@@ -77,15 +84,29 @@ export async function middleware(request: NextRequest) {
       .eq('id', session.user.id)
       .single()
 
-    // Check role-based access
-    if (path.startsWith('/admin') && profile?.role !== 'admin') {
-      // Non-admin users cannot access admin pages
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    // Get user's designated path based on role
+    const userRolePath = ROLE_PATHS[profile?.role as keyof typeof ROLE_PATHS] || ROLE_PATHS.client
+
+    // Handle role-based access control
+    const currentSection = path.split('/')[1] // Get first part of path (admin, driver, or dashboard)
+    const allowedPaths = {
+      admin: ['/admin'],
+      driver: ['/driver'],
+      client: ['/dashboard']
     }
 
-    if (path.startsWith('/dashboard') && profile?.role === 'admin') {
-      // Admin users should use the admin dashboard
-      return NextResponse.redirect(new URL('/admin', request.url))
+    // Check if user is trying to access an unauthorized section
+    const userRole = profile?.role || 'client'
+    if (!allowedPaths[userRole as keyof typeof allowedPaths].some(p => path.startsWith(p))) {
+      // Redirect to user's designated section if trying to access unauthorized area
+      return NextResponse.redirect(new URL(userRolePath, request.url))
+    }
+
+    // Special case: if accessing root dashboard paths, ensure users go to their specific dashboards
+    if (path === '/admin' || path === '/driver' || path === '/dashboard') {
+      if (path !== userRolePath) {
+        return NextResponse.redirect(new URL(userRolePath, request.url))
+      }
     }
     
     return response
