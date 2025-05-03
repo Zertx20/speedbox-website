@@ -216,7 +216,10 @@ export default function NewDeliveryPage() {
     const basePrice = pricePerKm[data.delivery_type as keyof typeof pricePerKm] * distance;
     const multiplier = data.package_type ? 
       packageMultipliers[data.package_type as keyof typeof packageMultipliers] : 1;
-    const finalPrice = basePrice * multiplier;
+    let finalPrice = basePrice * multiplier;
+    
+    // Enforce minimum price of 500 DA
+    finalPrice = Math.max(finalPrice, 500);
     
     // Calculate delivery time
     const averageSpeed = averageSpeeds[data.delivery_type as keyof typeof averageSpeeds];

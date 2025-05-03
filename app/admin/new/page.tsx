@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Package, LogOut, Plus, Loader2 } from "lucide-react"
+import { Package, LogOut, Plus, Loader2, Truck, Timer, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -17,6 +17,7 @@ import { createClient } from "@/utils/supabase/client"
 import { useToast } from "@/components/ui/use-toast"
 import { createDelivery, getUsers, getUserProfile } from "../actions"
 import { useRouter } from 'next/navigation'
+import { calculateDistanceBetweenWilayas } from "@/utils/calculateDistance"
 
 export default function AdminNewDeliveryPage() {
   const supabase = createClient()
@@ -40,7 +41,8 @@ export default function AdminNewDeliveryPage() {
     origin_wilaya: '',
     destination_wilaya: '',
     package_type: '',
-    delivery_date: '',
+    delivery_type: 'Standard', // Default service type
+    delivery_date: new Date().toISOString().split('T')[0],
     package_description: '',
     delivery_notes: ''
   })
@@ -54,6 +56,39 @@ export default function AdminNewDeliveryPage() {
     package_description: '',
     delivery_notes: ''
   })
+  
+  // Calculated delivery details
+  const [deliveryDetails, setDeliveryDetails] = useState({
+    distance_km: 0,
+    price: 0,
+    max_delivery_time: 0,
+    formatted: {
+      price: '0 DA',
+      time: '0 hours'
+    }
+  });
+  
+  // Service type pricing
+  const pricePerKm = {
+    Standard: 2,  // 2 DA per km
+    Express: 5,   // 5 DA per km
+    VIP: 7        // 7 DA per km
+  };
+  
+  // Package type multipliers
+  const packageMultipliers = {
+    "document": 0.5,         // 50% of base price for documents
+    "small-package": 1,      // Base price for small packages
+    "medium-package": 1.5,   // 50% more for medium packages
+    "large-package": 2.5     // 150% more for large packages
+  };
+  
+  // Average speeds for delivery time calculation (km/h)
+  const averageSpeeds = {
+    Standard: 50,  // 50 km/h for Standard service
+    Express: 80,   // 80 km/h for Express service
+    VIP: 120       // 120 km/h for VIP service
+  };
   
   // Handle form input changes - using local state first, then update formData on submit
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -105,8 +140,69 @@ export default function AdminNewDeliveryPage() {
         ...prev,
         [field]: value
       }))
+      
+      // Recalculate delivery details when origin, destination, package type or delivery type changes
+      if (['origin_wilaya', 'destination_wilaya', 'package_type', 'delivery_type'].includes(field)) {
+        calculateDeliveryDetails({
+          ...formData,
+          [field]: value
+        });
+      }
     }
   }
+  
+  // Calculate distance, price, and delivery time
+  const calculateDeliveryDetails = (data: typeof formData) => {
+    // Only calculate if we have both origin and destination
+    if (!data.origin_wilaya || !data.destination_wilaya) return;
+    
+    // Get wilaya names from values and convert to proper format for distance calculation
+    // The dashboard uses lowercase values but wilayaLocations needs properly capitalized names
+    const originWilaya = algeriaWilayas.find(w => w.value === data.origin_wilaya)?.name || '';
+    const destinationWilaya = algeriaWilayas.find(w => w.value === data.destination_wilaya)?.name || '';
+    
+    // Skip calculation if we don't have valid wilaya names
+    if (!originWilaya || !destinationWilaya) return;
+    
+    console.log('Origin Wilaya: ', originWilaya);
+    console.log('Destination Wilaya: ', destinationWilaya);
+    // Calculate the real distance between wilayas (includes 1.2× road factor)
+    const distance = calculateDistanceBetweenWilayas(originWilaya, destinationWilaya);
+    console.log('Calculated Distance: ', distance);
+    
+    // Calculate price based on service type, distance and package size
+    const basePrice = pricePerKm[data.delivery_type as keyof typeof pricePerKm] * distance;
+    const multiplier = data.package_type ? 
+      packageMultipliers[data.package_type as keyof typeof packageMultipliers] : 1;
+    let finalPrice = basePrice * multiplier;
+    
+    // Enforce minimum price of 500 DA
+    finalPrice = Math.max(finalPrice, 500);
+    
+    // Calculate delivery time based on service type and distance
+    const speed = averageSpeeds[data.delivery_type as keyof typeof averageSpeeds];
+    const timeInHours = distance / speed;
+    
+    // Format the price with thousands separator
+    const formattedPrice = Math.round(finalPrice)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " DA";
+    
+    // Format the time - round up to nearest 0.5
+    const roundedTime = Math.ceil(timeInHours * 2) / 2;
+    const formattedTime = roundedTime + (roundedTime === 1 ? " hour" : " hours");
+    
+    // Update state with calculated values
+    setDeliveryDetails({
+      distance_km: Math.round(distance),
+      price: Math.round(finalPrice),
+      max_delivery_time: roundedTime,
+      formatted: {
+        price: formattedPrice,
+        time: formattedTime
+      }
+    });
+  };
   
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,8 +222,11 @@ export default function AdminNewDeliveryPage() {
     // Update formData with localInputs before submitting
     const updatedFormData = {
       ...formData,
-      ...localInputs
-    }
+      ...localInputs,
+      price: deliveryDetails.price,
+      distance_km: deliveryDetails.distance_km,
+      max_delivery_time: deliveryDetails.max_delivery_time
+    };
     
     // Create form data for server action
     const formDataObj = new FormData()
@@ -164,7 +263,8 @@ export default function AdminNewDeliveryPage() {
           origin_wilaya: '',
           destination_wilaya: '',
           package_type: '',
-          delivery_date: '',
+          delivery_type: 'Standard', // Default service type
+          delivery_date: new Date().toISOString().split('T')[0],
           package_description: '',
           delivery_notes: ''
         })
@@ -468,17 +568,35 @@ export default function AdminNewDeliveryPage() {
                         Package Type
                       </Label>
                       <Select onValueChange={(value) => handleSelectChange(value, 'package_type')} value={formData.package_type}>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-300 focus:border-primary">
-                          <SelectValue placeholder="Select type" />
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-300 focus:ring-primary">
+                          <SelectValue placeholder="Select package type" />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-gray-700 text-gray-300">
-                          <SelectItem value="document">Document</SelectItem>
-                          <SelectItem value="small-package">Small Package</SelectItem>
-                          <SelectItem value="medium-package">Medium Package</SelectItem>
-                          <SelectItem value="large-package">Large Package</SelectItem>
+                          <SelectItem value="document">Document (×0.5)</SelectItem>
+                          <SelectItem value="small-package">Small Package (×1)</SelectItem>
+                          <SelectItem value="medium-package">Medium Package (×1.5)</SelectItem>
+                          <SelectItem value="large-package">Large Package (×2.5)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="delivery-type" className="text-gray-300">
+                        Service Type
+                      </Label>
+                      <Select onValueChange={(value) => handleSelectChange(value, 'delivery_type')} value={formData.delivery_type}>
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-300 focus:border-primary">
+                          <SelectValue placeholder="Select service" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700 text-gray-300">
+                          <SelectItem value="Standard">Standard (2 DA/km)</SelectItem>
+                          <SelectItem value="Express">Express (5 DA/km)</SelectItem>
+                          <SelectItem value="VIP">VIP (7 DA/km)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="delivery-date" className="text-gray-300">
                         Delivery Date
@@ -493,6 +611,43 @@ export default function AdminNewDeliveryPage() {
                       />
                     </div>
                   </div>
+                  
+                  {/* Delivery Details */}
+                  {formData.origin_wilaya && formData.destination_wilaya && formData.package_type && (
+                    <div className="mt-6 border-t border-gray-700 pt-6 mb-6">
+                      <h3 className="text-lg font-medium text-gray-200 mb-4">Delivery Details</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                          <div className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-blue-900/30 text-blue-400">
+                            <Truck size={18} />
+                          </div>
+                          <span className="text-xs text-gray-400">Distance</span>
+                          <span className="text-xl font-semibold text-gray-200">{deliveryDetails.distance_km} km</span>
+                          <span className="text-xs text-gray-500">Road-adjusted distance</span>
+                        </div>
+                        
+                        <div className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-lg border border-gray-700 shadow-md">
+                          <div className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-green-900/30 text-green-400">
+                            <CreditCard size={18} />
+                          </div>
+                          <span className="text-xs text-gray-400">Price</span>
+                          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                            {deliveryDetails.formatted.price}
+                          </span>
+                          <span className="text-xs text-gray-500">{formData.delivery_type} service</span>
+                        </div>
+                        
+                        <div className="flex flex-col items-center justify-center p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                          <div className="flex items-center justify-center w-10 h-10 mb-2 rounded-full bg-purple-900/30 text-purple-400">
+                            <Timer size={18} />
+                          </div>
+                          <span className="text-xs text-gray-400">Max. Delivery Time</span>
+                          <span className="text-xl font-semibold text-gray-200">{deliveryDetails.formatted.time}</span>
+                          <span className="text-xs text-gray-500">May arrive sooner</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="package-description" className="text-gray-300">
@@ -572,7 +727,7 @@ const algeriaWilayas = [
   { code: "13", name: "Tlemcen", value: "tlemcen" },
   { code: "14", name: "Tiaret", value: "tiaret" },
   { code: "15", name: "Tizi Ouzou", value: "tizi-ouzou" },
-  { code: "16", name: "Alger", value: "alger" },
+  { code: "16", name: "Algiers", value: "algiers" },
   { code: "17", name: "Djelfa", value: "djelfa" },
   { code: "18", name: "Jijel", value: "jijel" },
   { code: "19", name: "Sétif", value: "setif" },

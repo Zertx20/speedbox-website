@@ -14,9 +14,13 @@ export type DeliveryFormData = {
   origin_wilaya: string
   destination_wilaya: string
   package_type: string
+  delivery_type: string
   delivery_date: string
   package_description: string
   delivery_notes: string
+  price: number
+  distance_km: number
+  max_delivery_time: number
 }
 
 // Fetch all users for admin selection
@@ -74,9 +78,13 @@ export async function createDelivery(formData: FormData) {
   const origin_wilaya = formData.get('origin_wilaya') as string
   const destination_wilaya = formData.get('destination_wilaya') as string
   const package_type = formData.get('package_type') as string
+  const delivery_type = formData.get('delivery_type') as string
   const delivery_date = formData.get('delivery_date') as string
   const package_description = formData.get('package_description') as string
   const delivery_notes = formData.get('delivery_notes') as string
+  const price = Number(formData.get('price')) || 0
+  const distance_km = Number(formData.get('distance_km')) || 0
+  const max_delivery_time = Number(formData.get('max_delivery_time')) || 0
   
   // Check if user is admin or if they're creating a delivery for themselves
   if (sender_id !== user.id) {
@@ -104,9 +112,13 @@ export async function createDelivery(formData: FormData) {
       origin_wilaya,
       destination_wilaya,
       package_type,
+      delivery_type,
       delivery_date,
       package_description,
-      delivery_notes
+      delivery_notes,
+      price,
+      distance_km,
+      max_delivery_time
     })
     .select()
   

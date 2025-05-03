@@ -39,7 +39,10 @@ const TestPage = () => {
   // Calculate price based on service type, distance and package size
   const basePrice = pricePerKm[serviceType as keyof typeof pricePerKm] * distance;
   const multiplier = packageMultipliers[packageType as keyof typeof packageMultipliers];
-  const finalPrice = basePrice * multiplier;
+  let finalPrice = basePrice * multiplier;
+  
+  // Enforce minimum price of 500 DA
+  finalPrice = Math.max(finalPrice, 500);
   
   // Format price with thousands separator (4 000 DA)
   const formatPrice = (price: number): string => {
