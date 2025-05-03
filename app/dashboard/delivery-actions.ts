@@ -12,9 +12,13 @@ export type DeliveryFormData = {
   origin_wilaya: string
   destination_wilaya: string
   package_type: string
+  delivery_type: string
   delivery_date: string
   package_description: string
   delivery_notes: string
+  price: number
+  distance_km: number
+  max_delivery_time: number
 }
 
 // Fetch active deliveries for the current user
@@ -147,9 +151,15 @@ export async function createDelivery(formData: FormData) {
   const origin_wilaya = formData.get('origin_wilaya') as string;
   const destination_wilaya = formData.get('destination_wilaya') as string;
   const package_type = formData.get('package_type') as string;
+  const delivery_type = formData.get('delivery_type') as string;
   const delivery_date = formData.get('delivery_date') as string;
   const package_description = formData.get('package_description') as string;
   const delivery_notes = formData.get('delivery_notes') as string;
+  
+  // Get calculated delivery details
+  const price = parseInt(formData.get('price') as string) || 0;
+  const distance_km = parseFloat(formData.get('distance_km') as string) || 0;
+  const max_delivery_time = parseFloat(formData.get('max_delivery_time') as string) || 0;
   
   // Insert delivery into database
   const { data, error } = await supabase
@@ -163,9 +173,13 @@ export async function createDelivery(formData: FormData) {
       origin_wilaya,
       destination_wilaya,
       package_type,
+      delivery_type,
       delivery_date,
       package_description,
-      delivery_notes
+      delivery_notes,
+      price,
+      distance_km,
+      max_delivery_time
     })
     .select();
   

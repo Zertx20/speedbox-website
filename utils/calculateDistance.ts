@@ -12,6 +12,6 @@ export function calculateDistanceBetweenWilayas(wilaya1: string, wilaya2: string
   const { lat: lat1, lon: lon1 } = wilayaLocations[wilaya1]; // Get lat/lon for wilaya1
   const { lat: lat2, lon: lon2 } = wilayaLocations[wilaya2]; // Get lat/lon for wilaya2
 
-  // Calculate the distance using the haversine formula
-  return haversineDistance(lat1, lon1, lat2, lon2); // Return the result
+  // Calculate the distance using the haversine formula and apply a 1.3 multiplier to account for real road distances
+  return haversineDistance(lat1, lon1, lat2, lon2) * 1.2; // Return the result
 }
