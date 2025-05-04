@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Package, LogOut, CheckCircle, Truck, Search, Bell, Calendar, Clock } from "lucide-react"
+import { Package, LogOut, CheckCircle, Truck, Search, Bell, Calendar, Clock, Copy, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -28,6 +28,7 @@ export default function TrackingPage() {
   const { toast } = useToast();
   const [userName, setUserName] = useState('User');
   const [selectedDelivery, setSelectedDelivery] = useState<any>(null);
+  const [copiedId, setCopiedId] = useState("");
   
   // Fetch user deliveries
   const fetchUserDeliveries = async () => {
@@ -117,6 +118,35 @@ export default function TrackingPage() {
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push('/login');
+  };
+  
+  // Copy delivery tracking URL to clipboard
+  const copyDeliveryId = async (id: string) => {
+    try {
+      // Copy the full tracking URL with https://
+      const fullUrl = `https://speedbox46.vercel.app/tracking/${id}`;
+      await navigator.clipboard.writeText(fullUrl);
+      
+      // Set copied state for this specific ID
+      setCopiedId(id);
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setCopiedId("");
+      }, 2000);
+      
+      toast({
+        title: "Copied!",
+        description: "Tracking link copied to clipboard",
+        duration: 2000,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy tracking link",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -224,17 +254,18 @@ export default function TrackingPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-gray-700">
-                    <TableHead className="text-gray-300">Delivery ID</TableHead>
+                    <TableHead className="text-gray-300">ID</TableHead>
+                    <TableHead className="text-gray-300">Package Type</TableHead>
+                    <TableHead className="text-gray-300">Destination</TableHead>
                     <TableHead className="text-gray-300">Date</TableHead>
                     <TableHead className="text-gray-300">Status</TableHead>
-                    <TableHead className="text-gray-300">Tracking</TableHead>
-                    <TableHead className="text-right text-gray-300">Actions</TableHead>
+                    <TableHead className="text-gray-300">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadingDeliveries ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4">
+                      <TableCell colSpan={6} className="text-center py-4">
                         <div className="flex justify-center">
                           <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -245,7 +276,7 @@ export default function TrackingPage() {
                     </TableRow>
                   ) : activeDeliveriesList.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-gray-400 py-4">
+                      <TableCell colSpan={6} className="text-center text-gray-400 py-4">
                         No active deliveries found
                       </TableCell>
                     </TableRow>
@@ -253,97 +284,46 @@ export default function TrackingPage() {
                     activeDeliveriesList.map((delivery) => (
                       <TableRow key={delivery.id} className="border-gray-700">
                         <TableCell className="font-medium text-gray-300">{delivery.id.substring(0, 8)}</TableCell>
+                        <TableCell className="text-gray-300">{delivery.package_type || 'Standard'}</TableCell>
+                        <TableCell className="text-gray-300">{delivery.destination_wilaya || '-'}</TableCell>
                         <TableCell className="text-gray-300">{delivery.delivery_date ? new Date(delivery.delivery_date).toLocaleDateString() : '-'}</TableCell>
                         <TableCell>
                           <Badge
-                            variant={delivery.status === "In Transit" ? "default" : "outline"}
-                            className={
-                              delivery.status === "In Transit"
-                                ? "bg-blue-500/20 text-blue-500 border-blue-500/30"
-                                : delivery.status === "Pending"
-                                  ? "bg-amber-500/20 text-amber-500 border-amber-500/30"
-                                  : "bg-primary/20 text-primary border-primary/30"
-                            }
+                            className={`${delivery.status === "In Transit" ? "bg-blue-500/20 text-blue-500 border-blue-500/30" : 
+                              delivery.status === "Pending" ? "bg-amber-500/20 text-amber-500 border-amber-500/30" : 
+                              "bg-primary/20 text-primary border-primary/30"}`}
                           >
                             {delivery.status || "Pending"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Link
-                            href={`/dashboard/tracking/${delivery.id}`}
-                            className="text-primary underline-offset-4 hover:underline"
-                          >
-                            View Tracking
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-gray-700 text-gray-300 hover:text-primary hover:border-primary"
-                                onClick={() => setSelectedDelivery(delivery)}
-                              >
-                                Details
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[600px] bg-gray-800 border-gray-700 text-gray-100">
-                              <DialogHeader>
-                                <DialogTitle className="text-primary">Delivery Details</DialogTitle>
-                                <DialogDescription className="text-gray-400">
-                                  Complete information about this delivery
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <h3 className="font-medium text-primary mb-2">Delivery Information</h3>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">ID:</span> {delivery.id}</p>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Status:</span> {delivery.status || 'Pending'}</p>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Date:</span> {delivery.delivery_date ? new Date(delivery.delivery_date).toLocaleDateString() : '-'}</p>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Package Type:</span> {delivery.package_type || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <h3 className="font-medium text-primary mb-2">Route Information</h3>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Origin:</span> {delivery.origin_wilaya || '-'}</p>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Destination:</span> {delivery.destination_wilaya || '-'}</p>
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4 mt-2">
-                                  <div>
-                                    <h3 className="font-medium text-primary mb-2">Sender Information</h3>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Name:</span> {delivery.sender_name || '-'}</p>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Phone:</span> {delivery.sender_phone || '-'}</p>
-                                  </div>
-                                  <div>
-                                    <h3 className="font-medium text-primary mb-2">Receiver Information</h3>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Name:</span> {delivery.receiver_name || '-'}</p>
-                                    <p className="text-sm mb-1"><span className="text-gray-400">Phone:</span> {delivery.receiver_phone || '-'}</p>
-                                  </div>
-                                </div>
-                                
-                                {(delivery.package_description || delivery.delivery_notes) && (
-                                  <div className="mt-2">
-                                    <h3 className="font-medium text-primary mb-2">Additional Information</h3>
-                                    {delivery.package_description && (
-                                      <div className="mb-2">
-                                        <p className="text-sm text-gray-400">Package Description:</p>
-                                        <p className="text-sm bg-gray-700/50 p-2 rounded">{delivery.package_description}</p>
-                                      </div>
-                                    )}
-                                    {delivery.delivery_notes && (
-                                      <div>
-                                        <p className="text-sm text-gray-400">Delivery Notes:</p>
-                                        <p className="text-sm bg-gray-700/50 p-2 rounded">{delivery.delivery_notes}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => router.push(`/tracking/${delivery.id}`)}
+                              className="text-blue-400 border-blue-400 hover:bg-blue-900 hover:text-blue-100"
+                            >
+                              Track
+                            </Button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyDeliveryId(delivery.id);
+                              }}
+                              className="p-1.5 hover:bg-gray-700 rounded flex items-center gap-1"
+                              title="Copy Tracking Link"
+                            >
+                              {copiedId === delivery.id ? (
+                                <>
+                                  <CheckCircle size={16} className="text-green-400" />
+                                  <span className="text-xs text-green-400">Copied</span>
+                                </>
+                              ) : (
+                                <Copy size={16} className="text-blue-400" />
+                              )}
+                            </button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

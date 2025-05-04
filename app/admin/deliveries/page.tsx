@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Package, LogOut, CheckCircle, Truck, XCircle } from "lucide-react"
+import { Package, LogOut, CheckCircle, Truck, XCircle, Copy, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -29,6 +29,7 @@ export default function AdminDeliveriesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [adminName, setAdminName] = useState('Admin')
+  const [copiedId, setCopiedId] = useState("")
   
   // Stats for dashboard cards
   const [stats, setStats] = useState({
@@ -147,10 +148,39 @@ export default function AdminDeliveriesPage() {
     }
   }
   
+  // Copy delivery tracking URL to clipboard
+  const copyDeliveryId = async (id: string) => {
+    try {
+      // Copy the full tracking URL with https://
+      const fullUrl = `https://speedbox46.vercel.app/tracking/${id}`;
+      await navigator.clipboard.writeText(fullUrl);
+      
+      // Set copied state for this specific ID
+      setCopiedId(id);
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setCopiedId("");
+      }, 2000);
+      
+      toast({
+        title: "Copied!",
+        description: "Tracking link copied to clipboard",
+        duration: 2000,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy tracking link",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Handle sign out
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
+    router.push('/login')
   }
   
   // Filter deliveries based on search query and status filter
@@ -354,19 +384,20 @@ export default function AdminDeliveriesPage() {
               <div className="rounded-md border border-gray-700 overflow-hidden">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-gray-700 bg-gray-800/50">
-                      <TableHead className="text-gray-300">Delivery ID</TableHead>
+                    <TableRow className="border-gray-700">
+                      <TableHead className="text-gray-300">ID</TableHead>
                       <TableHead className="text-gray-300">Sender</TableHead>
                       <TableHead className="text-gray-300">Route</TableHead>
-                      <TableHead className="text-gray-300">Delivery Date</TableHead>
+                      <TableHead className="text-gray-300">Date</TableHead>
                       <TableHead className="text-gray-300">Status</TableHead>
-                      <TableHead className="text-right text-gray-300">Actions</TableHead>
+                      <TableHead className="text-gray-300">Status Update</TableHead>
+                      <TableHead className="text-gray-300">Tracking Options</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-4">
+                        <TableCell colSpan={7} className="text-center py-4">
                           <div className="flex justify-center">
                             <div className="animate-spin h-5 w-5 rounded-full border-t-2 border-primary border-r-2 border-b-2 border-gray-800"></div>
                           </div>
@@ -374,7 +405,7 @@ export default function AdminDeliveriesPage() {
                       </TableRow>
                     ) : filteredDeliveries.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-gray-400 py-4">
+                        <TableCell colSpan={7} className="text-center text-gray-400 py-4">
                           {searchQuery || statusFilter !== "all" ? "No deliveries match your filters" : "No deliveries found"}
                         </TableCell>
                       </TableRow>
@@ -403,7 +434,7 @@ export default function AdminDeliveriesPage() {
                               {delivery.status || "Pending"}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell>
                             <Select
                               onValueChange={(value) => handleUpdateDeliveryStatus(delivery.id, value)}
                               defaultValue={delivery.status || "Pending"}
@@ -419,6 +450,36 @@ export default function AdminDeliveriesPage() {
                                 <SelectItem value="Failed">Failed</SelectItem>
                               </SelectContent>
                             </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => router.push(`/tracking/${delivery.id}`)}
+                                className="text-blue-400 border-blue-400 hover:bg-blue-900 hover:text-blue-100"
+                              >
+                                <ExternalLink size={14} className="mr-1" />
+                                Track
+                              </Button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyDeliveryId(delivery.id);
+                                }}
+                                className="p-1.5 hover:bg-gray-700 rounded flex items-center gap-1"
+                                title="Copy Tracking Link"
+                              >
+                                {copiedId === delivery.id ? (
+                                  <>
+                                    <CheckCircle size={16} className="text-green-400" />
+                                    <span className="text-xs text-green-400">Copied</span>
+                                  </>
+                                ) : (
+                                  <Copy size={16} className="text-blue-400" />
+                                )}
+                              </button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))

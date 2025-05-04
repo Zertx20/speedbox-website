@@ -78,6 +78,13 @@ export default function Home() {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
             </Link>
             <Link
+              href="/tracking"
+              className="text-sm font-medium text-gray-400 transition-colors hover:text-primary relative group"
+            >
+              Track Delivery
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+            </Link>
+            <Link
               href="/about"
               className="text-sm font-medium text-gray-400 transition-colors hover:text-primary relative group"
             >
@@ -560,8 +567,8 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <p className="text-xs text-gray-500">© {new Date().getFullYear()} SpeedBox. All rights reserved.</p>
-            <p className="text-xs text-gray-500">Made with ❤️ in Algeria</p>
+            <p className="text-xs text-gray-500"> 2023 SpeedBox. All rights reserved.</p>
+            <p className="text-xs text-gray-500">Made with in Algeria</p>
           </motion.div>
         </div>
       </motion.footer>
